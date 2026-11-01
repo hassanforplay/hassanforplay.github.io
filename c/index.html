@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arrow Story Reveal: a friend's challenge</title>
+<meta name="description" content="A friend challenges you to beat their time in Arrow Story Reveal.">
+<meta property="og:title" content="Arrow Story Reveal: can you beat my time?">
+<meta property="og:description" content="Clear the arrows, uncover the picture. Play free on Google Play.">
+<meta name="robots" content="noindex">
+<style>
+  :root { --bg1: #22345c; --bg2: #0d1324; --card: #1a2747; --text: #ffffff; --muted: #b7c2dc; --gold: #ffc83d; --accent: #2f8ff0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background: linear-gradient(180deg, var(--bg1), var(--bg2)) fixed;
+    color: var(--text);
+    font: 17px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Arabic", sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px 16px;
+  }
+  main { width: 100%; max-width: 420px; text-align: center; }
+  h1 { font-size: 30px; margin: 0 0 6px; letter-spacing: .3px; }
+  .tag { color: var(--muted); margin: 0 0 22px; }
+  .card { background: var(--card); border: 1px solid rgba(255,255,255,.1); border-radius: 26px; padding: 22px 18px; }
+  .level { font-size: 18px; color: var(--muted); margin: 0; }
+  .time { font-size: 56px; font-weight: 800; color: var(--gold); margin: 4px 0; font-variant-numeric: tabular-nums; }
+  .ask { font-size: 20px; font-weight: 700; margin: 0 0 18px; }
+  .btn { display: block; width: 100%; padding: 15px 18px; border-radius: 18px; font-weight: 800; font-size: 18px; text-decoration: none; margin-top: 12px; }
+  .play { background: var(--gold); color: #3a2600; box-shadow: 0 5px 0 #c98f00; }
+  .open { background: transparent; color: var(--text); border: 2px solid rgba(255,255,255,.35); }
+  .note { color: var(--muted); font-size: 14px; margin-top: 18px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="name">Arrow Story Reveal</h1>
+  <p class="tag" id="tag"></p>
+  <div class="card">
+    <div id="challenge" hidden>
+      <p class="level" id="level"></p>
+      <p class="time" id="time"></p>
+      <p class="ask" id="ask"></p>
+    </div>
+    <a class="btn open" id="open" hidden></a>
+    <a class="btn play" id="play"></a>
+  </div>
+  <p class="note" id="note"></p>
+</main>
+<script>
+  // The challenge travels in the link itself (?l=level&t=seconds&s=score); nothing is stored anywhere.
+  var TEXT = {
+    en: { tag: "Clear the arrows, uncover the picture", level: "Your friend cleared level {l} in", ask: "Can you beat that time?",
+          play: "Play free on Google Play", open: "I have the game: open it", note: "Install the game and the challenge waits for you inside." },
+    ar: { name: "درب السهام", tag: "أخرج الأسهم واكشف الصورة", level: "أنهى صديقك المرحلة {l} خلال", ask: "هل تستطيع أن تتفوق على هذا الوقت؟",
+          play: "العبها مجانًا على Google Play", open: "اللعبة عندي: افتحها", note: "ثبّت اللعبة وستجد التحدي في انتظارك داخلها." },
+    es: { tag: "Saca las flechas y descubre la imagen", level: "Tu amigo superó el nivel {l} en", ask: "¿Puedes batir ese tiempo?",
+          play: "Juega gratis en Google Play", open: "Ya tengo el juego: abrirlo", note: "Instala el juego y el reto te estará esperando dentro." },
+    pt: { tag: "Tire as flechas e descubra a imagem", level: "Seu amigo passou do nível {l} em", ask: "Consegue bater esse tempo?",
+          play: "Jogue grátis no Google Play", open: "Já tenho o jogo: abrir", note: "Instale o jogo e o desafio estará esperando por você." },
+    fr: { tag: "Sortez les flèches, découvrez l’image", level: "Ton ami a terminé le niveau {l} en", ask: "Peux-tu battre ce temps ?",
+          play: "Jouez gratuitement sur Google Play", open: "J’ai le jeu : l’ouvrir", note: "Installe le jeu et le défi t’attendra dedans." }
+  };
+  var PACKAGE = "com.hassannasar.darbsihaam";
+  var STORE = "https://play.google.com/store/apps/details?id=" + PACKAGE;
+
+  var lang = (navigator.language || "en").slice(0, 2).toLowerCase();
+  var t = TEXT[lang] || TEXT.en;
+  document.documentElement.lang = TEXT[lang] ? lang : "en";
+  if (lang === "ar") document.documentElement.dir = "rtl";
+
+  function number(name, min, max) {
+    var v = parseInt(new URLSearchParams(location.search).get(name), 10);
+    return isFinite(v) && v >= min && v <= max ? v : null;
+  }
+  var level = number("l", 1, 250), seconds = number("t", 1, 86400), score = number("s", 0, 10000000) || 0;
+
+  function clock(s) {
+    var m = Math.floor(s / 60), r = s % 60;
+    return m >= 60 ? Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0") + ":" + String(r).padStart(2, "0")
+                   : m + ":" + String(r).padStart(2, "0");
+  }
+
+  if (t.name) document.getElementById("name").textContent = t.name;
+  document.getElementById("tag").textContent = t.tag;
+  var play = document.getElementById("play");
+  play.textContent = t.play;
+  play.href = STORE;
+
+  if (level && seconds) {
+    var query = "l=" + level + "&t=" + seconds + "&s=" + score;
+    document.getElementById("challenge").hidden = false;
+    document.getElementById("level").textContent = t.level.replace("{l}", level);
+    document.getElementById("time").textContent = clock(seconds);
+    document.getElementById("ask").textContent = t.ask;
+    document.getElementById("note").textContent = t.note;
+    // The store hands the referrer to the game on its first run, so a new player starts on this challenge.
+    play.href = STORE + "&referrer=" + encodeURIComponent(query);
+    // On Android, a link that didn't open the game by itself can still open it (or the store if it's missing).
+    if (/Android/i.test(navigator.userAgent)) {
+      var open = document.getElementById("open");
+      open.textContent = t.open;
+      open.href = "intent://" + location.host + "/c/?" + query + "#Intent;scheme=https;package=" + PACKAGE +
+        ";S.browser_fallback_url=" + encodeURIComponent(play.href) + ";end";
+      open.hidden = false;
+    }
+  }
+</script>
+</body>
+</html>

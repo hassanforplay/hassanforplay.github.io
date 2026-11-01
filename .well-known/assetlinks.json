@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.hassannasar.darbsihaam.staging",
+      "sha256_cert_fingerprints": ["03:01:2A:22:A3:3F:21:A1:0D:B4:66:27:3E:7A:4B:B3:7A:6F:A9:7A:5A:B3:1C:9B:E8:10:97:1A:20:1F:DC:F1"]
+    }
+  }
+]
